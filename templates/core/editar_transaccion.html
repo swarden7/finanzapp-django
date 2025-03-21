@@ -1,0 +1,143 @@
+{% extends 'core/base.html' %}
+{% load formatters %}
+
+{% block title %}Editar Transacción - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Editar Transacción</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label for="{{ form.fecha.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha</label>
+                        {{ form.fecha }}
+                        {% if form.fecha.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.fecha.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.monto.id_for_label }}" class="block text-sm font-medium text-gray-700">Monto</label>
+                        {{ form.monto }}
+                        {% if form.monto.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.monto.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.tipo.id_for_label }}" class="block text-sm font-medium text-gray-700">Tipo</label>
+                        {{ form.tipo }}
+                        {% if form.tipo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.tipo.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.categoria.id_for_label }}" class="block text-sm font-medium text-gray-700">Categoría</label>
+                        {{ form.categoria }}
+                        {% if form.categoria.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.categoria.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.cuenta.id_for_label }}" class="block text-sm font-medium text-gray-700">Cuenta</label>
+                        {{ form.cuenta }}
+                        {% if form.cuenta.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.cuenta.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.descripcion.id_for_label }}" class="block text-sm font-medium text-gray-700">Descripción</label>
+                        {{ form.descripcion }}
+                        {% if form.descripcion.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.descripcion.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div id="cuotas_container" class="hidden">
+                        <div>
+                            <label for="{{ form.cuotas.id_for_label }}" class="block text-sm font-medium text-gray-700">Número de Cuotas</label>
+                            {{ form.cuotas }}
+                            {% if form.cuotas.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cuotas.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.cuota_actual.id_for_label }}" class="block text-sm font-medium text-gray-700">Cuota Actual</label>
+                            {{ form.cuota_actual }}
+                            {% if form.cuota_actual.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.cuota_actual.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.fecha_vencimiento.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                            {{ form.fecha_vencimiento }}
+                            {% if form.fecha_vencimiento.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.fecha_vencimiento.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <a href="{% url url_cancelar %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializar Select2 para los campos de selección
+    $(document).ready(function() {
+        $('#{{ form.tipo.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona el tipo de transacción'
+        });
+        
+        $('#{{ form.categoria.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona la categoría'
+        });
+        
+        $('#{{ form.cuenta.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona la cuenta'
+        });
+
+        // Mostrar/ocultar campos de cuotas según el tipo de cuenta
+        function toggleCuotas() {
+            const cuenta = $('#{{ form.cuenta.id_for_label }}').val();
+            const cuotasContainer = $('#cuotas_container');
+            if (cuenta) {
+                const cuentaSeleccionada = $('#{{ form.cuenta.id_for_label }} option:selected').text();
+                if (cuentaSeleccionada.includes('Tarjeta de Crédito')) {
+                    cuotasContainer.removeClass('hidden');
+                } else {
+                    cuotasContainer.addClass('hidden');
+                }
+            }
+        }
+        
+        $('#{{ form.cuenta.id_for_label }}').on('change', toggleCuotas);
+        toggleCuotas(); // Ejecutar al cargar la página
+    });
+</script>
+{% endblock %} 

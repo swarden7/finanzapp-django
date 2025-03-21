@@ -1,0 +1,176 @@
+{% extends 'core/base.html' %}
+{% load formatters %}
+
+{% block title %}Cuentas - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Guía de Uso -->
+    <div class="bg-blue-50 rounded-lg p-6">
+        <button onclick="toggleGuia()" class="w-full flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-blue-800">Guía de Cuentas</h3>
+            <i class="fas fa-chevron-down text-blue-800" id="guiaIcon"></i>
+        </button>
+        <div id="guiaContent" class="mt-4 space-y-4 hidden">
+            <div>
+                <h4 class="font-medium text-blue-700 mb-2">¿Cómo crear una cuenta?</h4>
+                <ol class="list-decimal list-inside space-y-2 text-blue-600">
+                    <li>Ingresa un nombre descriptivo para la cuenta</li>
+                    <li>Selecciona el tipo de cuenta (efectivo, tarjeta, cuenta bancaria, etc.)</li>
+                    <li>Elige la moneda de la cuenta</li>
+                    <li>Ingresa el saldo inicial</li>
+                </ol>
+            </div>
+            <div>
+                <h4 class="font-medium text-blue-700 mb-2">Consejos para gestionar cuentas:</h4>
+                <ul class="list-disc list-inside space-y-2 text-blue-600">
+                    <li>Mantén un registro actualizado de todos tus saldos</li>
+                    <li>Revisa periódicamente la conciliación de tus cuentas</li>
+                    <li>Agrupa cuentas similares para mejor organización</li>
+                    <li>Actualiza el saldo cuando realices transacciones</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Nueva Cuenta -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Nueva Cuenta</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label for="{{ form.nombre.id_for_label }}" class="block text-sm font-medium text-gray-700">Nombre</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.nombre.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Ingresa un nombre descriptivo para la cuenta</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.tipo.id_for_label }}" class="block text-sm font-medium text-gray-700">Tipo</label>
+                        {{ form.tipo }}
+                        {% if form.tipo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.tipo.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Selecciona el tipo de cuenta</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.moneda.id_for_label }}" class="block text-sm font-medium text-gray-700">Moneda</label>
+                        {{ form.moneda }}
+                        {% if form.moneda.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.moneda.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Elige la moneda de la cuenta</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.saldo.id_for_label }}" class="block text-sm font-medium text-gray-700">Saldo Inicial</label>
+                        {{ form.saldo }}
+                        {% if form.saldo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.saldo.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Ingresa el saldo actual de la cuenta</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar Cuenta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Cuentas -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Cuentas Existentes</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Moneda</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for cuenta in cuentas %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ cuenta.nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ cuenta.get_tipo_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ cuenta.get_moneda_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ cuenta.saldo|format_money }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <a href="{% url 'editar_cuenta' cuenta.id %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'eliminar_cuenta' cuenta.id %}" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay cuentas registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializar Select2 para los campos de selección
+    $(document).ready(function() {
+        $('#{{ form.tipo.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona el tipo de cuenta'
+        });
+        
+        $('#{{ form.moneda.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona la moneda'
+        });
+    });
+
+    // Función para mostrar/ocultar la guía
+    function toggleGuia() {
+        const content = document.getElementById('guiaContent');
+        const icon = document.getElementById('guiaIcon');
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            content.classList.add('hidden');
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+</script>
+{% endblock %} 

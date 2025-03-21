@@ -1,0 +1,134 @@
+{% extends 'core/base.html' %}
+{% load finanzapp_filters %}
+
+{% block title %}Dashboard - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Resumen de Cuentas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Saldo Total</h3>
+            <p class="text-3xl font-bold text-green-600">${{ total_saldo|floatformat:2 }}</p>
+        </div>
+        
+        {% for cuenta in cuentas %}
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700">{{ cuenta.nombre }}</h3>
+                    <p class="text-sm text-gray-500">{{ cuenta.get_tipo_display }}</p>
+                </div>
+                <i class="fas fa-wallet text-2xl text-blue-500"></i>
+            </div>
+            <p class="text-2xl font-bold mt-2 {% if cuenta.saldo >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                ${{ cuenta.saldo|floatformat:2 }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Últimas Transacciones -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Últimas Transacciones</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaccion in ultimas_transacciones %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaccion.fecha|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ transaccion.descripcion }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaccion.categoria.nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm {% if transaccion.tipo == 'ingreso' %}text-green-600{% else %}text-red-600{% endif %}">
+                            ${{ transaccion.monto|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay transacciones recientes
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Gastos por Categoría -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Gastos por Categoría</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for gasto in gastos_categoria %}
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-gray-700">{{ gasto.categoria__nombre }}</span>
+                            <span class="text-sm font-medium text-gray-900">${{ gasto.total|floatformat:2 }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ gasto.total|div:total_gastos|mul:100 }}%"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500 text-center">No hay gastos registrados</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Metas Financieras -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Metas Financieras</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for meta in metas_activas %}
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-gray-700">{{ meta.nombre }}</span>
+                            <span class="text-sm font-medium text-gray-900">${{ meta.monto_actual|floatformat:2 }} / ${{ meta.monto_objetivo|floatformat:2 }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ meta.monto_actual|div:meta.monto_objetivo|mul:100 }}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Objetivo: {{ meta.fecha_objetivo|date:"d/m/Y" }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500 text-center">No hay metas financieras activas</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Actualizar la página cada 5 minutos para mantener los datos actualizados
+    setTimeout(function() {
+        window.location.reload();
+    }, 300000);
+</script>
+{% endblock %} 

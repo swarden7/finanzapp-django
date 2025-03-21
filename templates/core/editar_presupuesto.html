@@ -1,0 +1,100 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Editar Presupuesto - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Editar Presupuesto</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.categoria.id_for_label }}" class="block text-sm font-medium text-gray-700">Categoría</label>
+                        {{ form.categoria }}
+                        {% if form.categoria.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.categoria.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.monto.id_for_label }}" class="block text-sm font-medium text-gray-700">Monto</label>
+                        {{ form.monto }}
+                        {% if form.monto.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.monto.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.periodo.id_for_label }}" class="block text-sm font-medium text-gray-700">Período</label>
+                        {{ form.periodo }}
+                        {% if form.periodo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.periodo.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.fecha_inicio.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                        {{ form.fecha_inicio }}
+                        {% if form.fecha_inicio.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.fecha_inicio.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="fecha_fin_container" class="hidden">
+                        <label for="{{ form.fecha_fin.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha de Fin</label>
+                        {{ form.fecha_fin }}
+                        {% if form.fecha_fin.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.fecha_fin.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <a href="{% url 'presupuestos' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Inicializar Select2 para los campos de selección
+        $('#{{ form.categoria.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona una categoría'
+        });
+        
+        $('#{{ form.periodo.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona un período'
+        });
+        
+        // Mostrar/ocultar campo de fecha fin según el período seleccionado
+        function toggleFechaFin() {
+            const periodo = $('#{{ form.periodo.id_for_label }}').val();
+            const fechaFinContainer = $('#fecha_fin_container');
+            if (periodo === 'personalizado') {
+                fechaFinContainer.removeClass('hidden');
+            } else {
+                fechaFinContainer.addClass('hidden');
+            }
+        }
+        
+        $('#{{ form.periodo.id_for_label }}').on('change', toggleFechaFin);
+        toggleFechaFin(); // Ejecutar al cargar la página
+    });
+</script>
+{% endblock %} 

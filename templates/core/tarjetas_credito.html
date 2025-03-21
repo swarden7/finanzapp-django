@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+{% load finanzapp_filters %}
+
+{% block title %}Tarjetas de Crédito - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Pagos Estimados de Tarjetas de Crédito</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarjeta</th>
+                        {% for mes in meses %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {{ mes.nombre }} {{ mes.año }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for pago in pagos_estimados %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ pago.tarjeta.nombre }}
+                        </td>
+                        {% for mes in meses %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% with key=mes.mes|add:"_"|add:mes.año %}
+                                ${{ pago.meses|get_item:key|floatformat:2 }}
+                            {% endwith %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ meses|length|add:1 }}" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay tarjetas de crédito registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

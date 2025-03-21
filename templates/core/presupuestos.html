@@ -1,0 +1,204 @@
+{% extends 'core/base.html' %}
+{% load formatters %}
+
+{% block title %}Presupuestos - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Guía de Uso -->
+    <div class="bg-blue-50 rounded-lg p-6">
+        <button onclick="toggleGuia()" class="w-full flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-blue-800">Guía de Presupuestos</h3>
+            <i class="fas fa-chevron-down text-blue-800" id="guiaIcon"></i>
+        </button>
+        <div id="guiaContent" class="mt-4 space-y-4 hidden">
+            <div>
+                <h4 class="font-medium text-blue-700 mb-2">¿Cómo crear un presupuesto?</h4>
+                <ol class="list-decimal list-inside space-y-2 text-blue-600">
+                    <li>Selecciona la categoría para el presupuesto</li>
+                    <li>Ingresa el monto presupuestado</li>
+                    <li>Elige el período (mensual, trimestral, anual)</li>
+                    <li>Establece la fecha de inicio</li>
+                    <li>Opcionalmente, define una fecha de fin</li>
+                </ol>
+            </div>
+            <div>
+                <h4 class="font-medium text-blue-700 mb-2">Consejos para gestionar presupuestos:</h4>
+                <ul class="list-disc list-inside space-y-2 text-blue-600">
+                    <li>Establece presupuestos realistas basados en gastos históricos</li>
+                    <li>Revisa periódicamente el progreso del presupuesto</li>
+                    <li>Ajusta los presupuestos según cambien tus necesidades</li>
+                    <li>Usa categorías específicas para un mejor control</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Nuevo Presupuesto -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Nuevo Presupuesto</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label for="{{ form.categoria.id_for_label }}" class="block text-sm font-medium text-gray-700">Categoría</label>
+                        {{ form.categoria }}
+                        {% if form.categoria.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.categoria.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Selecciona la categoría para el presupuesto</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.monto.id_for_label }}" class="block text-sm font-medium text-gray-700">Monto</label>
+                        {{ form.monto }}
+                        {% if form.monto.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.monto.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Ingresa el monto presupuestado</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.periodo.id_for_label }}" class="block text-sm font-medium text-gray-700">Período</label>
+                        {{ form.periodo }}
+                        {% if form.periodo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.periodo.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Elige el período del presupuesto</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.fecha_inicio.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                        {{ form.fecha_inicio }}
+                        {% if form.fecha_inicio.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.fecha_inicio.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Selecciona la fecha de inicio del presupuesto</p>
+                    </div>
+                    
+                    <div id="fecha_fin_container" class="hidden">
+                        <label for="{{ form.fecha_fin.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha de Fin</label>
+                        {{ form.fecha_fin }}
+                        {% if form.fecha_fin.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.fecha_fin.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Define una fecha de fin opcional</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar Presupuesto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Presupuestos -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Presupuestos Existentes</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Fin</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for presupuesto in presupuestos %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ presupuesto.categoria.nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ presupuesto.monto|format_money }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ presupuesto.get_periodo_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ presupuesto.fecha_inicio|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ presupuesto.fecha_fin|date:"d/m/Y"|default:"-" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <a href="{% url 'editar_presupuesto' presupuesto.id %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'eliminar_presupuesto' presupuesto.id %}" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay presupuestos registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializar Select2 para los campos de selección
+    $(document).ready(function() {
+        $('#{{ form.categoria.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona la categoría'
+        });
+        
+        $('#{{ form.periodo.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona el período'
+        });
+        
+        // Mostrar/ocultar campo de fecha fin según el período seleccionado
+        function toggleFechaFin() {
+            const periodo = $('#{{ form.periodo.id_for_label }}').val();
+            const fechaFinContainer = $('#fecha_fin_container');
+            if (periodo === 'personalizado') {
+                fechaFinContainer.removeClass('hidden');
+            } else {
+                fechaFinContainer.addClass('hidden');
+            }
+        }
+        
+        $('#{{ form.periodo.id_for_label }}').on('change', toggleFechaFin);
+        toggleFechaFin(); // Ejecutar al cargar la página
+    });
+
+    // Función para mostrar/ocultar la guía
+    function toggleGuia() {
+        const content = document.getElementById('guiaContent');
+        const icon = document.getElementById('guiaIcon');
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            content.classList.add('hidden');
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+</script>
+{% endblock %} 

@@ -1,0 +1,259 @@
+{% extends 'core/base.html' %}
+{% load formatters %}
+{% load finanzapp_filters %}
+
+{% block title %}Transacciones - FinanzApp{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Guía de Uso -->
+    <div class="bg-blue-50 rounded-lg p-6">
+        <button onclick="toggleGuia()" class="w-full flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-blue-800">Guía de Transacciones</h3>
+            <i class="fas fa-chevron-down text-blue-800" id="guiaIcon"></i>
+        </button>
+        <div id="guiaContent" class="mt-4 space-y-4 hidden">
+            <div>
+                <h4 class="font-medium text-blue-700 mb-2">¿Cómo registrar una transacción?</h4>
+                <ol class="list-decimal list-inside space-y-2 text-blue-600">
+                    <li>Selecciona la fecha de la transacción</li>
+                    <li>Ingresa el monto de la transacción</li>
+                    <li>Elige el tipo (ingreso o gasto)</li>
+                    <li>Selecciona la categoría correspondiente</li>
+                    <li>Elige la cuenta desde donde se realiza la transacción</li>
+                    <li>Agrega una descripción opcional</li>
+                </ol>
+            </div>
+            <div>
+                <h4 class="font-medium text-blue-700 mb-2">Consejos importantes:</h4>
+                <ul class="list-disc list-inside space-y-2 text-blue-600">
+                    <li>Registra tus transacciones lo antes posible para mantener un control preciso</li>
+                    <li>Asegúrate de que el tipo de transacción coincida con la categoría seleccionada</li>
+                    <li>Usa descripciones claras para facilitar el seguimiento</li>
+                    <li>Verifica que el monto y la cuenta sean correctos antes de guardar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Nueva Transacción -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Nueva Transacción</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label for="{{ form.fecha.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha</label>
+                        {{ form.fecha }}
+                        {% if form.fecha.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.fecha.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Selecciona la fecha en que ocurrió la transacción</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.monto.id_for_label }}" class="block text-sm font-medium text-gray-700">Monto</label>
+                        {{ form.monto }}
+                        {% if form.monto.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.monto.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Ingresa el monto exacto de la transacción</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.tipo.id_for_label }}" class="block text-sm font-medium text-gray-700">Tipo</label>
+                        {{ form.tipo }}
+                        {% if form.tipo.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.tipo.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Elige si es un ingreso o un gasto</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.categoria.id_for_label }}" class="block text-sm font-medium text-gray-700">Categoría</label>
+                        {{ form.categoria }}
+                        {% if form.categoria.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.categoria.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Selecciona la categoría que mejor describe la transacción</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.cuenta.id_for_label }}" class="block text-sm font-medium text-gray-700">Cuenta</label>
+                        {{ form.cuenta }}
+                        {% if form.cuenta.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.cuenta.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Elige la cuenta que se verá afectada</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.descripcion.id_for_label }}" class="block text-sm font-medium text-gray-700">Descripción</label>
+                        {{ form.descripcion }}
+                        {% if form.descripcion.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.descripcion.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">Describe brevemente la transacción</p>
+                    </div>
+
+                    <div id="cuotas_container" class="hidden col-span-full">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="{{ form.cuotas.id_for_label }}" class="block text-sm font-medium text-gray-700">Número de Cuotas</label>
+                                {{ form.cuotas }}
+                                {% if form.cuotas.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.cuotas.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-sm text-gray-500">Ingresa el número total de cuotas</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.cuota_actual.id_for_label }}" class="block text-sm font-medium text-gray-700">Cuota Actual</label>
+                                {{ form.cuota_actual }}
+                                {% if form.cuota_actual.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.cuota_actual.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-sm text-gray-500">Ingresa el número de la cuota actual</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.fecha_vencimiento.id_for_label }}" class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                                {{ form.fecha_vencimiento }}
+                                {% if form.fecha_vencimiento.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.fecha_vencimiento.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-sm text-gray-500">Selecciona la fecha de vencimiento de la cuota</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar Transacción
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Transacciones -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Historial de Transacciones</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaccion in transacciones %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaccion.fecha|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if transaccion.tipo == 'ingreso' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ transaccion.get_tipo_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="{{ transaccion.categoria.icono }} mr-2 text-gray-400"></i>
+                                <span class="text-sm text-gray-900">{{ transaccion.categoria.nombre }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaccion.cuenta.nombre }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaccion.descripcion }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm {% if transaccion.tipo == 'ingreso' %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ transaccion.monto|format_money }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay transacciones registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializar Select2 para los campos de selección
+    $(document).ready(function() {
+        $('#{{ form.tipo.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona el tipo de transacción'
+        });
+        
+        $('#{{ form.categoria.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona la categoría'
+        });
+        
+        $('#{{ form.cuenta.id_for_label }}').select2({
+            theme: 'classic',
+            placeholder: 'Selecciona la cuenta'
+        });
+
+        // Mostrar/ocultar campos de cuotas según el tipo de cuenta
+        function toggleCuotas() {
+            const cuenta = $('#{{ form.cuenta.id_for_label }}').val();
+            const cuotasContainer = $('#cuotas_container');
+            if (cuenta) {
+                const cuentaSeleccionada = $('#{{ form.cuenta.id_for_label }} option:selected').text();
+                console.log('Cuenta seleccionada:', cuentaSeleccionada); // Para debugging
+                
+                // Verificar si la cuenta es una tarjeta de crédito
+                if (cuentaSeleccionada.includes('Tarjeta de Crédito')) {
+                    console.log('Mostrando campos de cuotas'); // Para debugging
+                    cuotasContainer.removeClass('hidden');
+                } else {
+                    console.log('Ocultando campos de cuotas'); // Para debugging
+                    cuotasContainer.addClass('hidden');
+                }
+            }
+        }
+        
+        $('#{{ form.cuenta.id_for_label }}').on('change', toggleCuotas);
+        toggleCuotas(); // Ejecutar al cargar la página
+    });
+
+    // Función para mostrar/ocultar la guía
+    function toggleGuia() {
+        const content = document.getElementById('guiaContent');
+        const icon = document.getElementById('guiaIcon');
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            content.classList.add('hidden');
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+</script>
+{% endblock %} 
